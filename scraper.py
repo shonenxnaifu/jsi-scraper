@@ -45,23 +45,25 @@ def extract_project_links_from_category_page(soup: BeautifulSoup) -> List[str]:
     :return: List of project URLs
     """
     links = []
-    
+
     # Look for project links in the page
-    # WordPress usually has articles/posts in <article> tags or <div> with specific classes
-    articles = soup.find_all('article')
-    
-    for article in articles:
-        # Look for links within the article
-        link_tags = article.find_all('a', href=True)
-        for link_tag in link_tags:
-            href = link_tag['href']
-            if 'jogjasonicindex.com' in href or href.startswith('/'):
-                full_url = urljoin(BASE_URL, href)
-                # Filter for project-specific URLs (avoid other site links)
-                if '/20' in full_url and 'jogjasonicindex.com' in full_url:
-                    links.append(full_url)
-    
-    # Alternative: Look for links in post-title or similar classes
+    # Based on HTML analysis, project links are in li.wp-block-post elements with h2.wp-block-post-title > a
+    project_items = soup.find_all('li', class_='wp-block-post')
+
+    for item in project_items:
+        # Look for links within h2.wp-block-post-title > a
+        title_link = item.find('h2', class_='wp-block-post-title')
+        if title_link:
+            link_tag = title_link.find('a', href=True)
+            if link_tag:
+                href = link_tag['href']
+                if 'jogjasonicindex.com' in href or href.startswith('/'):
+                    full_url = urljoin(BASE_URL, href)
+                    # Filter for project-specific URLs (avoid other site links)
+                    if '/20' in full_url and 'jogjasonicindex.com' in full_url:
+                        links.append(full_url)
+
+    # Alternative: Look for any links in post-title or similar classes if the above doesn't work
     if not links:
         title_links = soup.find_all('a', class_=lambda x: x and 'title' in x.lower())
         for link in title_links:
@@ -76,7 +78,7 @@ def extract_project_links_from_category_page(soup: BeautifulSoup) -> List[str]:
     for link in links:
         if link not in unique_links:
             unique_links.append(link)
-    
+
     return unique_links
 
 
@@ -102,153 +104,193 @@ def extract_project_data_from_page(soup: BeautifulSoup, project_url: str) -> Dic
         'tags': [],
         'media': []
     }
-    
+
     # Extract project name from title
-    title_tag = soup.find('h1', class_=lambda x: x and 'title' in x.lower())
-    if not title_tag:
-        title_tag = soup.find('title')
+    title_tag = soup.find('h1', class_='wp-block-post-title')
     if title_tag:
         project_data['nama_projek'] = title_tag.get_text().strip()
-    
-    # Extract content area (description and other details)
-    content_div = soup.find('div', class_=lambda x: x and 'content' in x.lower())
-    if not content_div:
-        content_div = soup.find('main') or soup.find('article')
-    
-    if content_div:
-        # Extract description (usually the main content)
-        paragraphs = content_div.find_all('p')
-        if paragraphs:
-            descriptions = []
-            for p in paragraphs:
-                text = p.get_text().strip()
-                # Skip empty paragraphs
-                if text and 'projek' in text.lower():
-                    descriptions.append(text)
-            if descriptions:
-                project_data['deskripsi'] = ' '.join(descriptions)[:500]  # Limit description length
 
-        # Look for specific fields like format, genre, etc.
-        # These are often in sidebars, meta info, or structured content
-        all_text = content_div.get_text()
-        
-        # Extract year if mentioned in the text
-        import re
-        year_matches = re.findall(r'\b(19|20)\d{2}\b', all_text)
-        if year_matches:
-            project_data['tahun'] = year_matches[0]
-        
-        # Look for format (group/solo)
-        format_keywords = ['group', 'solo', 'duo', 'trio']
-        for keyword in format_keywords:
-            if keyword in all_text.lower():
-                project_data['format'] = keyword
-                break
-        
-        # Look for status (aktif/bubar)
-        status_keywords = ['aktif', 'bubar', 'aktif', 'masih aktif', 'dibubarkan']
-        for keyword in status_keywords:
-            if keyword in all_text.lower():
-                project_data['status'] = 'aktif' if any(active in keyword for active in ['aktif', 'masih']) else 'bubar'
-                break
-
-    # Extract author information
-    author_elem = soup.find('span', class_=lambda x: x and 'author' in x.lower())
-    if not author_elem:
-        author_elem = soup.find('a', class_=lambda x: x and 'author' in x.lower())
-    if author_elem:
-        project_data['author'] = author_elem.get_text().strip()
-    
-    # Extract date posted
-    date_elem = soup.find('time')
-    if not date_elem:
-        date_elem = soup.find('span', class_=lambda x: x and any(d in x.lower() for d in ['date', 'time']))
+    # Extract date posted - found in .wp-block-post-date time element
+    date_elem = soup.find('div', class_='wp-block-post-date')
     if date_elem:
-        project_data['date_posted'] = date_elem.get_text().strip()
+        time_elem = date_elem.find('time')
+        if time_elem:
+            project_data['date_posted'] = time_elem.get_text().strip()
 
-    # Extract media (images)
-    img_tags = soup.find_all('img')
-    for img in img_tags:
-        src = img.get('src')
-        if src and 'jogjasonicindex.com' in src:
-            project_data['media'].append(src)
-    
-    # Remove duplicates from media list
-    project_data['media'] = list(set(project_data['media']))
+    # Extract author - found in .wp-block-post-author element
+    author_elem = soup.find('div', class_='wp-block-post-author')
+    if author_elem:
+        author_name = author_elem.find(class_='wp-block-post-author__name')
+        if author_name:
+            project_data['author'] = author_name.get_text().strip()
 
-    # Extract links (pranala)
-    link_tags = soup.find_all('a', href=True)
-    for link in link_tags:
-        href = link['href']
-        if any(domain in href for domain in ['youtube.com', 'bandcamp.com', 'soundcloud.com', 'spotify.com']):
-            project_data['pranala'].append(href)
-    
-    # Remove duplicates from pranala list
-    project_data['pranala'] = list(set(project_data['pranala']))
+    # Content area for extracting structured data
+    content_div = soup.find('div', class_='entry-content') or soup.find('main')
 
-    # Extract tags
-    tag_elements = soup.find_all(['span', 'a'], class_=lambda x: x and 'tag' in x.lower())
-    for tag_elem in tag_elements:
-        tag_text = tag_elem.get_text().strip()
-        if tag_text:
-            project_data['tags'].append(tag_text)
-    
-    # Extract genre if available
-    # Look for genre in text content
     if content_div:
-        text_content = content_div.get_text().lower()
-        genre_keywords = ['genre', 'aliran', 'style', 'jenis', 'type']
-        for keyword in genre_keywords:
-            if keyword in text_content:
-                # Look for text after the keyword
-                parts = text_content.split(keyword)
-                if len(parts) > 1:
-                    # Get the part after the keyword and extract first meaningful word
-                    after_keyword = parts[1].strip()
-                    words = after_keyword.split()[:5]  # Look at first 5 words
-                    for word in words:
-                        if len(word) > 2 and not word.startswith('(') and not word.endswith(')'):
-                            project_data['genre'] = word
-                            break
-                    if project_data['genre']:
+        # Extract description (text after <strong>Deskripsi</strong>)
+        paragraphs = content_div.find_all('p')
+        for p in paragraphs:
+            strong_tag = p.find('strong')
+            if strong_tag and 'deskripsi' in strong_tag.get_text().lower():
+                next_p = p.find_next_sibling('p')
+                if next_p:
+                    project_data['deskripsi'] = next_p.get_text().strip()
+                    break
+
+        # Extract format (from buttons after <strong>Format</strong>)
+        format_section = None
+        for strong in content_div.find_all('strong'):
+            if 'format' in strong.get_text().lower():
+                format_section = strong.find_parent()
+                break
+
+        if format_section:
+            buttons_container = format_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link')
+                for button_link in button_links:
+                    format_val = button_link.get_text().strip()
+                    if format_val:
+                        project_data['format'] = format_val
                         break
-    
-    # Extract discography (if table exists)
-    # Look for tables that might contain discography info
-    tables = soup.find_all('table')
-    for table in tables:
-        rows = table.find_all('tr')
-        if len(rows) > 1:  # If table has multiple rows, likely discography
-            for row in rows[1:]:  # Skip header row
-                cells = row.find_all(['td', 'th'])
-                if len(cells) >= 2:  # At least year and title
-                    disc_item = {
-                        'tahun': cells[0].get_text().strip() if len(cells) > 0 else None,
-                        'judul': cells[1].get_text().strip() if len(cells) > 1 else None,
-                        'jenis': cells[2].get_text().strip() if len(cells) > 2 else None,
-                        'format': cells[3].get_text().strip() if len(cells) > 3 else None,
-                        'pranala': []
-                    }
-                    
-                    # Extract any links from the row
-                    links_in_row = row.find_all('a', href=True)
-                    for link in links_in_row:
-                        disc_item['pranala'].append(link['href'])
-                    
-                    project_data['diskografi'].append(disc_item)
 
-    # Extract members (anggota)
-    # Look for member information in the content
-    if content_div:
-        content_text = content_div.get_text()
-        # Look for keywords related to members
-        member_keywords = ['anggota', 'member', 'personil', 'personnel']
-        for keyword in member_keywords:
-            if keyword in content_text.lower():
-                # This is a simplified approach - in reality, member extraction would need to be
-                # more specific to the website's structure
-                # For now, we'll just mark that members should be extracted
-                pass
+        # Extract anggota (members) - from buttons after <strong>Anggota</strong>
+        anggota_section = None
+        for strong in content_div.find_all('strong'):
+            if 'anggota' in strong.get_text().lower():
+                anggota_section = strong.find_parent()
+                break
+
+        if anggota_section:
+            buttons_container = anggota_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link')
+                project_data['anggota'] = []
+                for button_link in button_links:
+                    member_name = button_link.get_text().strip()
+                    if member_name:
+                        project_data['anggota'].append(member_name)
+
+        # Extract genre - from buttons after <strong>Genre</strong>
+        genre_section = None
+        for strong in content_div.find_all('strong'):
+            if 'genre' in strong.get_text().lower():
+                genre_section = strong.find_parent()
+                break
+
+        if genre_section:
+            buttons_container = genre_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link')
+                for button_link in button_links:
+                    genre_val = button_link.get_text().strip()
+                    if genre_val:
+                        project_data['genre'] = genre_val
+                        break
+
+        # Extract tahun (year) - from buttons after <strong>Tahun</strong>
+        tahun_section = None
+        for strong in content_div.find_all('strong'):
+            if 'tahun' in strong.get_text().lower():
+                tahun_section = strong.find_parent()
+                break
+
+        if tahun_section:
+            buttons_container = tahun_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link')
+                for button_link in button_links:
+                    tahun_val = button_link.get_text().strip()
+                    if tahun_val:
+                        project_data['tahun'] = tahun_val
+                        break
+
+        # Extract status - from buttons after <strong>Status</strong>
+        status_section = None
+        for strong in content_div.find_all('strong'):
+            if 'status' in strong.get_text().lower():
+                status_section = strong.find_parent()
+                break
+
+        if status_section:
+            buttons_container = status_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link')
+                for button_link in button_links:
+                    status_val = button_link.get_text().strip()
+                    if status_val:
+                        project_data['status'] = status_val
+                        break
+
+        # Extract discography from table after <strong>Diskografi</strong>
+        diskografi_section = None
+        for strong in content_div.find_all('strong'):
+            if 'diskografi' in strong.get_text().lower():
+                diskografi_section = strong.find_parent()
+                break
+
+        if diskografi_section:
+            table = diskografi_section.find_next('table')
+            if table:
+                rows = table.find_all('tr')[1:]  # Skip header row
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) >= 4:  # Need at least tahun, judul, jenis, format
+                        disc_item = {
+                            'tahun': cells[0].get_text().strip(),
+                            'judul': cells[1].get_text().strip(),
+                            'jenis': cells[2].get_text().strip(),
+                            'format': cells[3].get_text().strip(),
+                            'pranala': []
+                        }
+                        # Extract links from the row
+                        links_in_row = row.find_all('a', href=True)
+                        for link in links_in_row:
+                            disc_item['pranala'].append(link['href'])
+                        project_data['diskografi'].append(disc_item)
+
+        # Extract pranala (links) - from buttons after <strong>Pranala</strong>
+        pranala_section = None
+        for strong in content_div.find_all('strong'):
+            if 'pranala' in strong.get_text().lower():
+                pranala_section = strong.find_parent()
+                break
+
+        if pranala_section:
+            buttons_container = pranala_section.find_next_sibling('div', class_='wp-block-buttons')
+            if buttons_container:
+                button_links = buttons_container.find_all('a', class_='wp-block-button__link', href=True)
+                for button_link in button_links:
+                    href = button_link['href']
+                    project_data['pranala'].append(href)
+
+    # Extract media (images from gallery)
+    gallery = soup.find('figure', class_='wp-block-gallery')
+    if gallery:
+        img_tags = gallery.find_all('img')
+        for img in img_tags:
+            src = img.get('src')
+            if src and 'jogjasonicindex.com' in src:
+                # Clean up the src URL by removing query parameters
+                clean_src = src.split('?')[0]
+                project_data['media'].append(clean_src)
+
+    # Extract tags from taxonomy-post_tag elements after "Tags" text
+    for p_tag in soup.find_all('p', string=lambda text: text and 'Tags' in text):
+        tags_container = p_tag.find_next_sibling('div', class_='taxonomy-post_tag')
+        if tags_container:
+            tag_links = tags_container.find_all('a', href=True)
+            for tag_link in tag_links:
+                tag_text = tag_link.get_text().strip()
+                if tag_text:
+                    project_data['tags'].append(tag_text)
+            break
+
+    # Remove duplicates from lists
+    project_data['pranala'] = list(set(project_data['pranala']))
+    project_data['tags'] = list(set(project_data['tags']))
+    project_data['media'] = list(set(project_data['media']))
 
     return project_data
 
@@ -261,28 +303,16 @@ def get_total_category_pages() -> int:
     soup = get_page_soup(CATEGORY_URL)
     if not soup:
         return 1
-    
+
     # Look for pagination links
     max_page = 1
-    
-    # Look for page links in the page
-    page_links = soup.find_all('a', href=True)
-    for link in page_links:
-        href = link['href']
-        if 'page/' in href:
-            try:
-                page_num = int(href.split('page/')[1].split('/')[0])
-                if page_num > max_page:
-                    max_page = page_num
-            except (ValueError, IndexError):
-                continue
-    
-    # Alternative: look for page numbers in navigation elements
-    nav_elements = soup.find_all(['div', 'nav', 'ul'], class_=lambda x: x and any(p in x.lower() for p in ['page', 'nav', 'pagination']))
-    for nav in nav_elements:
-        links = nav.find_all('a', href=True)
-        for link in links:
-            href = link['href']
+
+    # Look for pagination in nav.wp-block-query-pagination (WordPress Gutenberg block)
+    pagination_nav = soup.find('nav', class_='wp-block-query-pagination')
+    if pagination_nav:
+        page_links = pagination_nav.find_all('a', class_='page-numbers')
+        for link in page_links:
+            href = link.get('href', '')
             if 'page/' in href:
                 try:
                     page_num = int(href.split('page/')[1].split('/')[0])
@@ -290,7 +320,39 @@ def get_total_category_pages() -> int:
                         max_page = page_num
                 except (ValueError, IndexError):
                     continue
-    
+
+        # Also check for the last page number directly in .page-numbers
+        last_page_link = pagination_nav.find_all('a', class_='page-numbers')[-1:]  # Get the last element
+        if last_page_link:
+            href = last_page_link[0].get('href', '')
+            if 'page/' in href:
+                try:
+                    page_num = int(href.split('page/')[1].split('/')[0])
+                    if page_num > max_page:
+                        max_page = page_num
+                except (ValueError, IndexError):
+                    pass
+
+    # Alternative: look for page links in the page if Gutenberg pagination not found
+    if max_page == 1:  # If no pagination found via Gutenberg blocks
+        page_links = soup.find_all('a', href=True)
+        for link in page_links:
+            href = link['href']
+            if 'page/' in href and 'jogjasonicindex.com/category/projek' in href:
+                try:
+                    page_num = int(href.split('page/')[1].split('/')[0])
+                    if page_num > max_page:
+                        max_page = page_num
+                except (ValueError, IndexError):
+                    continue
+
+    # If no pagination links found, return 1 (only one page)
+    if max_page == 1:
+        # Check if there's a "Next" button but no numbered links
+        next_button = soup.find('a', class_='wp-block-query-pagination-next')
+        if next_button:
+            max_page = 2  # At least 2 pages if there's a next button
+
     return max_page
 
 

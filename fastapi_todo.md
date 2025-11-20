@@ -7,21 +7,32 @@
 - Requirements include `requests`, `beautifulsoup4`, and other scraping libraries
 
 ## Category Page Structure (Based on category_page.html)
-- The website is built on WordPress platform
+- The website is built on WordPress platform with Gutenberg blocks
 - Category pages have pagination elements following the pattern: https://jogjasonicindex.com/category/projek (page 1), https://jogjasonicindex.com/category/projek/page/2/, etc.
-- Category pages list project names with links to individual project pages
+- Category pages list project names with links to individual project pages inside li.wp-block-post elements
 - HTML structure uses Gutenberg blocks and WordPress-specific elements
-- The website includes a query-based post template that displays projects in a list
-- Pagination controls are implemented using WordPress's built-in query pagination system
-- Each project list item contains a title that links to the individual project page
+- Project links are found in h2.wp-block-post-title > a elements inside li.wp-block-post elements
+- Pagination controls are in nav.wp-block-query-pagination with links in .wp-block-query-pagination-numbers
+- Each project list item (li.wp-block-post) contains:
+  - Project title in h2.wp-block-post-title > a[href]
+  - Date in .wp-block-post-date time element
 
 ## Project Page Structure (Based on projek_page.html)
 - Project pages are individual WordPress posts with project-specific content
-- Each project page contains the project name in the title tag
-- Project details are likely contained within Gutenberg blocks or WordPress post content
-- The pages include WordPress-specific elements like post titles, dates, and author information
-- Project pages may contain structured data for the various fields we need to extract (nama projek (projek name/title), date_posted, author, deskripsi, format, anggota, genre, tahun, status, dikografi, pranala, tags, and media)
-- HTML structure follows WordPress post format with content areas containing the detailed project information
+- Each project page contains the project name in h1.wp-block-post-title
+- Project details are contained within Gutenberg blocks in the content area
+- The pages include WordPress-specific elements like post titles, dates (wp-block-post-date), and author information (wp-block-post-author)
+- Project data fields are structured with labels in <strong> tags followed by content:
+  - **Deskripsi**: Found after <strong>Deskripsi</strong> in paragraph tags
+  - **Format**: Found in .wp-block-buttons with links inside div containing <strong>Format</strong>
+  - **Anggota**: Found in .wp-block-buttons with links inside div containing <strong>Anggota</strong>
+  - **Genre**: Found in .wp-block-buttons with links inside div containing <strong>Genre</strong>
+  - **Tahun**: Found in .wp-block-buttons with links inside div containing <strong>Tahun</strong>
+  - **Status**: Found in .wp-block-buttons with links inside div containing <strong>Status</strong>
+  - **Diskografi**: Found in table.wp-block-table inside div containing <strong>Diskografi</strong>
+  - **Pranala**: Found in .wp-block-buttons with links inside div containing <strong>Pranala</strong>
+  - **Media**: Found in figure.wp-block-gallery images and YouTube embeds
+  - **Tags**: Found in div containing "Tags" text with taxonomy-post_tag elements
 
 ## Scraping Flow
 - Visit the main category page at https://jogjasonicindex.com/category/projek
