@@ -1,0 +1,67 @@
+# WEB Anatomy jogjasonicindex.com
+
+## list of required data
+- **projek**: project name
+- **page_link**: link to project page
+- **date_posted**: date posted / written by
+- **author**: article posted by
+- **deskripsi**: description of project
+- **format**: format group / solo
+- **anggota**: member of group / solo
+- **genre**: genre of the project
+- **tahun**: year of emerge
+- **status**: status of the project (aktif/bubar)
+- **diskografi**: discography of the project (table)
+- **pranala**: related link to the project (bandcamp, youtube, etc)
+- **tags**: related tags to the project
+- **last_page**: last page number of the category page (for loop)
+- **media**: related images to the project
+
+## WEB Structure
+- Category Page: https://jogjasonicindex.com/category/projek/
+  - **page_link**
+    - identifier:
+      - parent class: .wp-container-core-group-is-layout-c7bd8c59 > div > ul
+      - child class: li .wp-block-post-title > a href
+  - **last_page**
+    - identifier:
+      - parent class: .wp-block-query-pagination-numbers
+      - child class: .page-numbers (find lates element to get latest number of page)
+- Project Page: https://jogjasonicindex.com/2025/11/08/error/ (year/month/date/project_name)
+  - **projek**
+    - identifier:
+      - parent class: .wp-block-post-title > a
+  - **date_posted**
+    - identifier:
+      - parent class: .wp-block-post-date > time
+  - **author**
+    - identifier:
+      - parent class: .wp-block-post-author__name
+  - **deskripsi**
+    - identifier:
+      - parent class: .entry-content
+  - **format**
+    - identifier:
+      - parent class: .entry-content
+  - **anggota**
+    - identifier:
+      - parent class: .entry-content
+  - **genre**
+    - identifier:
+      - parent class: .entry-content
+  - **tahun**
+    - identifier:
+      - parent class: .entry-content
+  - **status**
+    - identifier:
+      - parent class: .entry-content
+  - **diskografi**
+    - identifier:
+      - parent class: .entry-content
+  - **pranala**
+    - identifier:
+      - parent class: .entry-content
+  - **image**
+    - identifier:
+      - parent class: .entry-content
+
