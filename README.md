@@ -1,6 +1,6 @@
 # JSI Scrapper
 
-A web scraping project to collect data from websites by parsing HTML elements.
+A web scraping project specifically designed to collect data from jogjasonicindex.com by parsing HTML elements.
 
 ## Setup
 
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 ## Available Libraries
 
-This project includes the following web scraping libraries:
+This project includes the following web scraping libraries specifically for scraping jogjasonicindex.com:
 - `requests` - For making HTTP requests
 - `beautifulsoup4` - For parsing HTML/XML
 - `lxml` - For fast parsing with XPath support
@@ -26,7 +26,7 @@ This project includes the following web scraping libraries:
 
 Check the `web_scraping_libraries.md` file for detailed information about each library and recommendations on which to use for your specific project.
 
-The `scrape.py` file contains a basic template to start your scraping project.
+The `scrape.py` file contains a basic template to start your scraping project for jogjasonicindex.com.
 
 For API usage, see the main FastAPI application in `main.py`.
 
@@ -44,23 +44,21 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 1. **JSON Endpoint**: `/scrape/json`
    - Method: GET
    - Parameters:
-     - `url` (required): The category URL to scrape projects from
      - `max_pages` (optional): Limit the number of project pages to scrape
-   - Returns: JSON formatted scraped data
+   - Returns: JSON formatted scraped data from jogjasonicindex.com
 
 2. **CSV Endpoint**: `/scrape/csv`
    - Method: GET
    - Parameters:
-     - `url` (required): The category URL to scrape projects from
      - `max_pages` (optional): Limit the number of project pages to scrape
-   - Returns: CSV formatted scraped data as a downloadable file
+   - Returns: CSV formatted scraped data from jogjasonicindex.com as a downloadable file
 
 ### API Documentation
 After starting the server, visit `http://localhost:8000/docs` to access the interactive API documentation and test the endpoints.
 
 ## Important Notes
 
-- Always respect the website's `robots.txt` file
+- Always respect jogjasonicindex.com's `robots.txt` file
 - Be mindful of rate limiting to avoid being blocked
-- Check the website's terms of service before scraping
-- Consider using official APIs if available
+- Check jogjasonicindex.com's terms of service before scraping
+- This scraper is specifically designed for jogjasonicindex.com and may not work on other websites
