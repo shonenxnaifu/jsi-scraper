@@ -6,7 +6,7 @@
 - Currently a command-line script (`scrape.py`)
 - Requirements include `requests`, `beautifulsoup4`, and other scraping libraries
 
-## Category Page Structure (Based on category_page.html)
+## Category Page Structure (Based on ../web_sources/category_page.html)
 - The website is built on WordPress platform with Gutenberg blocks
 - Category pages have pagination elements following the pattern: https://jogjasonicindex.com/category/projek (page 1), https://jogjasonicindex.com/category/projek/page/2/, etc.
 - Category pages list project names with links to individual project pages inside li.wp-block-post elements
@@ -17,7 +17,7 @@
   - Project title in h2.wp-block-post-title > a[href]
   - Date in .wp-block-post-date time element
 
-## Project Page Structure (Based on projek_page.html)
+## Project Page Structure (Based on ../web_sources/projek_page.html)
 - Project pages are individual WordPress posts with project-specific content
 - Each project page contains the project name in h1.wp-block-post-title
 - Project details are contained within Gutenberg blocks in the content area
@@ -40,7 +40,7 @@
 - Each category page follows the URL pattern: https://jogjasonicindex.com/category/projek for page 1, https://jogjasonicindex.com/category/projek/page/2/ for page 2, etc.
 - Visit the category page first and get the URLs to the project pages through this page
 - Iterate through all category pages until reaching the last page
-- Visit each project page (web_sources/projek_page.html) and extract the detailed project data; here is the data that needs to be extracted:
+- Visit each project page (../web_sources/projek_page.html) and extract the detailed project data; here is the data that needs to be extracted:
   - **projek**: project name
   - **date_posted**: date posted / written by
   - **author**: article posted by
