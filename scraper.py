@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 import time
 import logging
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

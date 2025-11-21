@@ -3,8 +3,6 @@ from fastapi.responses import StreamingResponse
 from typing import Optional
 import io
 import csv
-import json
-from pathlib import Path
 import logging
 
 from scraper import scrape_all_projects

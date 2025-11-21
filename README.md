@@ -1,6 +1,7 @@
-# JSI Scrapper
+# JSI Scraper
 
 A web scraping project specifically designed to collect data from jogjasonicindex.com by parsing HTML elements.
+Of course, this is ✨**vibe coded**✨ using [**QWEN CODE**](https://qwenlm.github.io/qwen-code-docs/en/). 
 
 ## Setup
 
@@ -13,14 +14,12 @@ pip install -r requirements.txt
 
 ## Available Libraries
 
-This project includes the following web scraping libraries specifically for scraping jogjasonicindex.com:
+This project includes the following libraries specifically for scraping jogjasonicindex.com:
 - `requests` - For making HTTP requests
 - `beautifulsoup4` - For parsing HTML/XML
-- `lxml` - For fast parsing with XPath support
-- `selenium` - For browser automation
-- `playwright` - For modern browser automation
-- `scrapy` - For comprehensive scraping framework
-- `pyquery` - For jQuery-like HTML manipulation
+- `fastapi` - For API framework
+- `uvicorn` - For ASGI server
+- `pydantic` - For data validation
 
 ## Getting Started
 
