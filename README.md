@@ -1,6 +1,6 @@
 # JSI Scraper
 
-A web scraping project specifically designed to collect data from jogjasonicindex.com by parsing HTML elements.
+A web scraping project specifically designed to collect data from [jogjasonicindex.com](https://jogjasonicindex.com/) by parsing HTML elements.
 Of course, this is ✨**vibe coded**✨ using [**QWEN CODE**](https://qwenlm.github.io/qwen-code-docs/en/). 
 
 ## Setup
