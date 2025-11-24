@@ -67,4 +67,4 @@ jobs:
             # Remove old container
             docker rm $(echo $CONTAINER_NAME)
             # Run a new container from a new image
-            docker run -d -p 8000:8021 --name $(echo $CONTAINER_NAME) --memory=256m --memory-swap=512m --restart=unless-stopped pawitrawarda/$(echo $IMAGE_NAME):latest
+            docker run -d -p 8021:8000 --name $(echo $CONTAINER_NAME) --memory=256m --memory-swap=512m --restart=unless-stopped pawitrawarda/$(echo $IMAGE_NAME):latest
