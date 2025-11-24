@@ -1,1 +1,10 @@
 v_jsi_scrapper/
+jsi_env/
+app/__pycache__/
+
+.DS_Store
+
+
+# Python cache
+cache/
+__pycache__/

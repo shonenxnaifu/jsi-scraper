@@ -1,0 +1,70 @@
+name: Build and Deploy Classifier API to Production
+
+# 1
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events but only for the master branch
+  push:
+    branches: [main]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Production"
+        required: true
+#2
+env:
+  IMAGE_NAME: "jsi_scrap_image"
+  CONTAINER_NAME: "jsi_scrap_ctr"
+
+#3
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: pawitrawarda/jsi_scrap_image
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          push: true
+          tags: pawitrawarda/jsi_scrap_image:latest
+          labels: latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - name: Deploy to VPS via SSH action
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORT }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          envs: IMAGE_NAME, CONTAINER_NAME
+          script: |
+            # Pull registry
+            docker pull pawitrawarda/$(echo $IMAGE_NAME):latest
+            # Stop running container
+            docker stop $(echo $CONTAINER_NAME)
+            # Remove old container
+            docker rm $(echo $CONTAINER_NAME)
+            # Run a new container from a new image
+            docker run -d -p 8000:8021 --name $(echo $CONTAINER_NAME) --memory=256m --memory-swap=512m --restart=unless-stopped pawitrawarda/$(echo $IMAGE_NAME):latest
