@@ -5,7 +5,7 @@ Of course, this is ✨**vibe coded**✨ using [**QWEN CODE**](https://qwenlm.git
 
 ## Setup
 
-1. Make sure you have Python 3.11 installed
+1. Make sure you have Python 3.11+ installed (Python 3.10 is also supported when using Docker)
 2. Install the required dependencies:
 
 ```bash
@@ -27,7 +27,7 @@ Check the `web_scraping_libraries.md` file for detailed information about each l
 
 The `scrape.py` file contains a basic template to start your scraping project for jogjasonicindex.com.
 
-For API usage, see the main FastAPI application in `main.py`.
+For API usage, see the main FastAPI application in `app/main.py`.
 
 ## API Usage
 
@@ -35,8 +35,23 @@ The project now includes a FastAPI application with two endpoints:
 
 ### Starting the API Server
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
+cd app && uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+### Running with Docker
+You can also run this application using Docker:
+
+1. Build the Docker image:
+```bash
+docker build -t jsi-scraper .
+```
+
+2. Run the container:
+```bash
+docker run -p 8000:8000 jsi-scraper
+```
+
+The application will be available at `http://localhost:8000`.
 
 ### Endpoints
 
