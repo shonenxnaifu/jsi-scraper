@@ -23,8 +23,6 @@ This project includes the following libraries specifically for scraping jogjason
 
 ## Getting Started
 
-Check the `web_scraping_libraries.md` file for detailed information about each library and recommendations on which to use for your specific project.
-
 The `scrape.py` file contains a basic template to start your scraping project for jogjasonicindex.com.
 
 For API usage, see the main FastAPI application in `app/main.py`.
@@ -72,7 +70,7 @@ After starting the server, visit `http://localhost:8000/docs` to access the inte
 
 ## Important Notes
 
-- Always respect jogjasonicindex.com's `robots.txt` file
+- Always respect [jogjasonicindex.com's](https://jogjasonicindex.com) `robots.txt` file
 - Be mindful of rate limiting to avoid being blocked
 - Check jogjasonicindex.com's terms of service before scraping
 - This scraper is specifically designed for jogjasonicindex.com and may not work on other websites
@@ -113,13 +111,12 @@ The application has been enhanced to handle production deployment challenges, sp
 This project follows semantic versioning. For information about releases and how to create them, see:
 - [CHANGELOG.md](CHANGELOG.md) - Detailed changes for each release
 - [RELEASE_NOTES.md](RELEASE_NOTES.md) - Detailed release notes
-- [RELEASE_PROCESS.md](RELEASE_PROCESS.md) - Complete release process documentation
 
 ### Docker Images
 Docker images are published to DockerHub with version tags. To use a specific version:
 ```bash
-docker pull your-docker-username/jsi-scraper:v1.0.0
+docker pull pawitrawarda/jsi-scraper:latest
 ```
 
 ### GitHub Releases
-Check the [Releases](https://github.com/your-username/jsi-scraper/releases) page for downloadable assets and release notes.
+Check the [Releases](https://github.com/shonenxnaifu/jsi-scraper/releases) page for downloadable assets and release notes.
