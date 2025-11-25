@@ -8,6 +8,7 @@ from typing import List, Dict, Optional
 import time
 import logging
 from urllib.parse import urljoin
+import signal
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,25 +18,42 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://jogjasonicindex.com"
 CATEGORY_URL = f"{BASE_URL}/category/projek"
 
+# Timeout configuration
+REQUEST_TIMEOUT = 30  # seconds for each HTTP request
+SCRAPE_TIMEOUT = 60   # seconds for entire scraping operation
+MAX_RETRIES = 3       # number of retries for failed requests
 
-def get_page_soup(url: str) -> Optional[BeautifulSoup]:
+
+def get_page_soup(url: str, timeout: int = REQUEST_TIMEOUT) -> Optional[BeautifulSoup]:
     """
     Fetch a page and return BeautifulSoup object
     :param url: URL to fetch
+    :param timeout: Request timeout in seconds
     :return: BeautifulSoup object with parsed HTML
     """
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
     }
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        return soup
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching the URL {url}: {e}")
-        return None
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.get(url, headers=headers, timeout=timeout)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, 'html.parser')
+            return soup
+        except requests.exceptions.Timeout:
+            logger.warning(f"Timeout occurred for URL {url}, attempt {attempt + 1}/{MAX_RETRIES}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching the URL {url}: {e}, attempt {attempt + 1}/{MAX_RETRIES}")
+
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(2 ** attempt)  # Exponential backoff
+
+    return None
 
 
 def extract_project_links_from_category_page(soup: BeautifulSoup) -> List[str]:
@@ -365,49 +383,64 @@ def scrape_all_projects(max_pages: Optional[int] = None) -> List[Dict]:
     all_projects = []
     page_num = 1
     total_pages = get_total_category_pages()
-    
+
     if max_pages and max_pages < total_pages:
         total_pages = max_pages
-    
+
     logger.info(f"Starting to scrape {total_pages} category pages...")
-    
+
+    # Add timeout to the entire scraping operation
+    start_time = time.time()
+
     while page_num <= total_pages:
+        # Check if we're approaching timeout
+        elapsed_time = time.time() - start_time
+        if elapsed_time > SCRAPE_TIMEOUT * 0.8:  # Use 80% of timeout to be safe
+            logger.warning(f"Approaching timeout, stopping early. Scraped {len(all_projects)} projects so far.")
+            break
+
         # Construct category page URL
         if page_num == 1:
             category_url = CATEGORY_URL
         else:
             category_url = f"{CATEGORY_URL}/page/{page_num}"
-        
+
         logger.info(f"Scraping category page {page_num}: {category_url}")
-        
+
         # Get category page soup
         category_soup = get_page_soup(category_url)
         if not category_soup:
             logger.warning(f"Failed to get category page {page_num}, skipping...")
             page_num += 1
             continue
-        
+
         # Extract project links from this category page
         project_links = extract_project_links_from_category_page(category_soup)
         logger.info(f"Found {len(project_links)} project links on page {page_num}")
-        
+
         # Scrape each project page
         for i, project_url in enumerate(project_links):
+            # Check timeout before scraping each project
+            elapsed_time = time.time() - start_time
+            if elapsed_time > SCRAPE_TIMEOUT * 0.8:
+                logger.warning(f"Approaching timeout, stopping early. Scraped {len(all_projects)} projects so far.")
+                return all_projects
+
             logger.info(f"Scraping project {i+1}/{len(project_links)} on page {page_num}: {project_url}")
-            
+
             project_soup = get_page_soup(project_url)
             if project_soup:
                 project_data = extract_project_data_from_page(project_soup, project_url)
                 project_data['source_url'] = project_url  # Add source URL for reference
                 all_projects.append(project_data)
-                
-                # Add a small delay to be respectful to the server
-                time.sleep(0.5)
+
+                # Add a smaller delay to be respectful to the server but more efficient
+                time.sleep(0.2)
             else:
                 logger.warning(f"Failed to scrape project: {project_url}")
-        
+
         page_num += 1
-    
+
     logger.info(f"Scraping completed! Total projects scraped: {len(all_projects)}")
     return all_projects
 

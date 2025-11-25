@@ -4,6 +4,8 @@ from typing import Optional
 import io
 import csv
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from scraper import scrape_all_projects
 from models import ScrapeResponse
@@ -23,6 +25,9 @@ async def root():
     return {"message": "JSI Scraper API", "description": "API for scraping project data from jogjasonicindex.com"}
 
 
+# Create a thread pool executor for CPU-intensive tasks
+executor = ThreadPoolExecutor(max_workers=1)
+
 @app.get("/scrape/json", response_model=ScrapeResponse)
 async def scrape_json(
     max_pages: Optional[int] = Query(None, description="Limit the number of project pages to scrape")
@@ -32,9 +37,13 @@ async def scrape_json(
     """
     try:
         logger.info("Starting JSON scraping process...")
-        projects = scrape_all_projects(max_pages=max_pages)
+
+        # Run the scraping function in a separate thread to avoid blocking
+        loop = asyncio.get_event_loop()
+        projects = await loop.run_in_executor(executor, scrape_all_projects, max_pages)
+
         logger.info(f"Scraping completed. Total projects: {len(projects)}")
-        
+
         response = ScrapeResponse(projects=projects)
         return response
     except Exception as e:
@@ -125,7 +134,11 @@ async def scrape_csv(
     """
     try:
         logger.info("Starting CSV scraping process...")
-        projects = scrape_all_projects(max_pages=max_pages)
+
+        # Run the scraping function in a separate thread to avoid blocking
+        loop = asyncio.get_event_loop()
+        projects = await loop.run_in_executor(executor, scrape_all_projects, max_pages)
+
         logger.info(f"Scraping completed. Total projects: {len(projects)}")
 
         # Generate CSV content
@@ -143,6 +156,12 @@ async def scrape_csv(
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "JSI Scraper API"}
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down executor...")
+    executor.shutdown(wait=True)
 
 
 if __name__ == "__main__":
