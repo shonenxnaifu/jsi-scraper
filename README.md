@@ -76,3 +76,30 @@ After starting the server, visit `http://localhost:8000/docs` to access the inte
 - Be mindful of rate limiting to avoid being blocked
 - Check jogjasonicindex.com's terms of service before scraping
 - This scraper is specifically designed for jogjasonicindex.com and may not work on other websites
+
+## Improvements for Production Deployment
+
+The application has been enhanced to handle production deployment challenges, specifically addressing 504 Gateway Timeout errors:
+
+### Timeout Handling Improvements
+1. **Request Timeout Protection**: Each HTTP request has a 30-second timeout with retry mechanism and exponential backoff
+2. **Overall Scraping Timeout**: Total scraping operation limited to 60 seconds with automatic termination
+3. **Improved Headers**: Better browser mimicry to reduce blocking chances
+4. **Efficient Processing**: Reduced inter-request delay from 0.5s to 0.2s while maintaining server respectfulness
+
+### Async Processing Implementation
+1. **Thread Pool Executor**: Long-running scraping operations run in separate threads to prevent blocking
+2. **Non-blocking Endpoints**: API endpoints use async/await patterns with thread pooling
+3. **Graceful Shutdown**: Proper cleanup of thread pools on server shutdown
+
+### Production Configuration
+1. **Gunicorn Server**: Replaced simple uvicorn with Gunicorn for better production handling
+2. **Configurable Workers**: Multiple worker processes for concurrent request handling
+3. **Extended Timeouts**: Server timeout configuration increased to 300 seconds
+4. **Enhanced Logging**: Better access and error logging for production monitoring
+
+### Usage Recommendations
+1. **Limit Scraping Scope**: Always specify `max_pages` parameter to prevent long-running operations
+2. **Monitor Progress**: Check logs during operation to track scraping progress
+3. **Implement Caching**: For repeated requests, consider implementing caching to reduce load
+4. **Consider Background Jobs**: For extensive scraping, consider implementing a background job queue
