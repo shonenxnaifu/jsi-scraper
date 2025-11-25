@@ -7,6 +7,7 @@ import logging
 
 from .scraper import scrape_all_projects
 from .models import ScrapeResponse
+from .__version__ import __version__
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="JSI Scraper API",
     description="API for scraping project data from jogjasonicindex.com",
-    version="1.0.0"
+    version=__version__
 )
 
 @app.get("/")

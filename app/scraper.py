@@ -8,7 +8,6 @@ from typing import List, Dict, Optional
 import time
 import logging
 from urllib.parse import urljoin
-import signal
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

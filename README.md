@@ -103,3 +103,23 @@ The application has been enhanced to handle production deployment challenges, sp
 2. **Monitor Progress**: Check logs during operation to track scraping progress
 3. **Implement Caching**: For repeated requests, consider implementing caching to reduce load
 4. **Consider Background Jobs**: For extensive scraping, consider implementing a background job queue
+
+## Releases
+
+### Current Version
+- Version: 1.0.0
+
+### Release Process
+This project follows semantic versioning. For information about releases and how to create them, see:
+- [CHANGELOG.md](CHANGELOG.md) - Detailed changes for each release
+- [RELEASE_NOTES.md](RELEASE_NOTES.md) - Detailed release notes
+- [RELEASE_PROCESS.md](RELEASE_PROCESS.md) - Complete release process documentation
+
+### Docker Images
+Docker images are published to DockerHub with version tags. To use a specific version:
+```bash
+docker pull your-docker-username/jsi-scraper:v1.0.0
+```
+
+### GitHub Releases
+Check the [Releases](https://github.com/your-username/jsi-scraper/releases) page for downloadable assets and release notes.
