@@ -19,7 +19,7 @@ CATEGORY_URL = f"{BASE_URL}/category/projek"
 
 # Timeout configuration
 REQUEST_TIMEOUT = 30  # seconds for each HTTP request
-SCRAPE_TIMEOUT = 300   # seconds for entire scraping operation (increased to allow scraping up to 160+ projects)
+SCRAPE_TIMEOUT = 1800   # seconds for entire scraping operation (increased to allow scraping up to 160+ projects) - 30 minutes
 MAX_RETRIES = 3       # number of retries for failed requests
 
 
