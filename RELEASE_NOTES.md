@@ -1,3 +1,9 @@
+# JSI Scraper v1.0.1 - Bug Fix
+
+## 🐞 Bug Fixes
+- Fixed data extraction from "Pranala" and "Pranala Terkait" sections
+- Deleted unused files
+
 # JSI Scraper v1.0.0 - Initial Release
 
 ## 🚀 What's New
