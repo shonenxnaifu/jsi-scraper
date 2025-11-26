@@ -7,7 +7,7 @@ class DiskografiItem(BaseModel):
     judul: Optional[str] = None
     jenis: Optional[str] = None
     format: Optional[str] = None
-    pranala: List[str] = []
+    pranala_terkait: List[str] = []
 
 
 class ProjectResponse(BaseModel):
