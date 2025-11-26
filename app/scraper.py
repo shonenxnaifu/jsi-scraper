@@ -259,17 +259,17 @@ def extract_project_data_from_page(soup: BeautifulSoup, project_url: str) -> Dic
                             'judul': cells[1].get_text().strip(),
                             'jenis': cells[2].get_text().strip(),
                             'format': cells[3].get_text().strip(),
-                            'pranala': []
+                            'pranala_terkait': []
                         }
                         # Extract links from the row
                         links_in_row = row.find_all('a', href=True)
                         for link in links_in_row:
-                            disc_item['pranala'].append(link['href'])
+                            disc_item['pranala_terkait'].append(link['href'])
                         project_data['diskografi'].append(disc_item)
 
         # Extract pranala (links) - from buttons after <strong>Pranala</strong>
         pranala_section = None
-        for strong in content_div.find_all('strong'):
+        for strong in content_div.find_all('strong', string='Pranala'):
             if 'pranala' in strong.get_text().lower():
                 pranala_section = strong.find_parent()
                 break
@@ -278,6 +278,7 @@ def extract_project_data_from_page(soup: BeautifulSoup, project_url: str) -> Dic
             buttons_container = pranala_section.find_next_sibling('div', class_='wp-block-buttons')
             if buttons_container:
                 button_links = buttons_container.find_all('a', class_='wp-block-button__link', href=True)
+                project_data['pranala'] = []
                 for button_link in button_links:
                     href = button_link['href']
                     project_data['pranala'].append(href)
