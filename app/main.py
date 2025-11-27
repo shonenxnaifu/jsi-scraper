@@ -45,7 +45,7 @@ async def scrape_json(
 
 def flatten_project_data(projects):
     """
-    Flatten project data for CSV generation, handling nested structures like discography
+    Flatten project data for CSV generation with multiline discography format
     """
     flattened_projects = []
 
@@ -66,16 +66,23 @@ def flatten_project_data(projects):
             'media': ', '.join(project.get('media', []))
         }
 
-        # Handle discography - since it's an array, we'll flatten it as a JSON string representation
+        # Handle discography - create multiline string for each discography item
         diskografi_list = project.get('diskografi', [])
-        if diskografi_list:
-            diskografi_strs = []
-            for disk in diskografi_list:
-                disk_str = f"{disk.get('tahun', '')}|{disk.get('judul', '')}|{disk.get('jenis', '')}|{disk.get('format', '')}|{', '.join(disk.get('pranala', []))}"
-                diskografi_strs.append(disk_str)
-            flat_project['diskografi'] = ';;'.join(diskografi_strs)  # Use ;; as separator between albums
-        else:
-            flat_project['diskografi'] = ''
+        diskografi_lines = []
+
+        for disk in diskografi_list:
+            tahun = disk.get('tahun', '')
+            judul = disk.get('judul', '')
+            jenis = disk.get('jenis', '')
+            format_val = disk.get('format', '')
+            pranala_terkait = ';'.join(disk.get('pranala_terkait', []))
+
+            # Create a line for this discography item
+            disk_line = f"{tahun} :: {judul} :: {jenis} :: {format_val} :: {pranala_terkait}"
+            diskografi_lines.append(disk_line)
+
+        # Join all discography items with actual newlines
+        flat_project['diskografi (tahun :: judul :: jenis :: format :: pranala_terkait)'] = '\n'.join(diskografi_lines)
 
         flattened_projects.append(flat_project)
 
@@ -83,7 +90,7 @@ def flatten_project_data(projects):
 
 def generate_csv_content(projects):
     """
-    Generate CSV content from project data
+    Generate CSV content from project data with multiline discography format
     """
     if not projects:
         return ""
@@ -94,8 +101,9 @@ def generate_csv_content(projects):
     # Define the CSV headers based on the expected data fields
     headers = [
         'nama_projek', 'date_posted', 'author', 'deskripsi', 'format',
-        'anggota', 'genre', 'tahun', 'status', 'diskografi', 'pranala',
-        'tags', 'media'
+        'anggota', 'genre', 'tahun', 'status',
+        'diskografi (tahun :: judul :: jenis :: format :: pranala_terkait)',
+        'pranala', 'tags', 'media'
     ]
 
     # Create a string buffer to hold CSV content
