@@ -1,3 +1,11 @@
+# JSI Scraper v1.0.2 - Enhanced CSV Export
+
+## 🐞 Bug Fixes
+- Fixed and Enhanced CSV export with improved discography formatting
+  - Multiline display of discography items within single cells
+  - New format: `tahun :: judul :: jenis :: format :: pranala_terkait`
+  - Clear column header: `diskografi (tahun :: judul :: jenis :: format :: pranala_terkait)`
+
 # JSI Scraper v1.0.1 - Bug Fix
 
 ## 🐞 Bug Fixes
