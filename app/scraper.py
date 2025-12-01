@@ -374,10 +374,11 @@ def get_total_category_pages() -> int:
     return max_page
 
 
-def scrape_all_projects(max_pages: Optional[int] = None) -> List[Dict]:
+def scrape_all_projects(max_pages: Optional[int] = None, progress_callback=None) -> List[Dict]:
     """
     Scrape all projects from all category pages
     :param max_pages: Maximum number of pages to scrape (None for all pages)
+    :param progress_callback: Optional callback function to report progress updates
     :return: List of project data dictionaries
     """
     all_projects = []
@@ -389,14 +390,41 @@ def scrape_all_projects(max_pages: Optional[int] = None) -> List[Dict]:
 
     logger.info(f"Starting to scrape {total_pages} category pages...")
 
+    # If progress callback is provided, update initial progress
+    if progress_callback:
+        progress_callback(0, 0)  # Initial progress: 0%
+
     # Add timeout to the entire scraping operation
     start_time = time.time()
+
+    # Count total projects for progress calculation
+    total_projects_expected = 0
+    if max_pages is None:
+        # Calculate total expected projects by scanning all pages first
+        temp_page = 1
+        while temp_page <= total_pages:
+            if temp_page == 1:
+                category_url = CATEGORY_URL
+            else:
+                category_url = f"{CATEGORY_URL}/page/{temp_page}"
+
+            category_soup = get_page_soup(category_url)
+            if category_soup:
+                project_links = extract_project_links_from_category_page(category_soup)
+                total_projects_expected += len(project_links)
+            temp_page += 1
+
+    current_project_index = 0
+    total_projects_to_process = total_projects_expected
 
     while page_num <= total_pages:
         # Check if we're approaching timeout
         elapsed_time = time.time() - start_time
         if elapsed_time > SCRAPE_TIMEOUT * 0.8:  # Use 80% of timeout to be safe
             logger.warning(f"Approaching timeout, stopping early. Scraped {len(all_projects)} projects so far.")
+            if progress_callback:
+                progress = min(100, int((len(all_projects) / total_projects_to_process) * 100)) if total_projects_to_process > 0 else 0
+                progress_callback(progress, len(all_projects))
             break
 
         # Construct category page URL
@@ -424,6 +452,9 @@ def scrape_all_projects(max_pages: Optional[int] = None) -> List[Dict]:
             elapsed_time = time.time() - start_time
             if elapsed_time > SCRAPE_TIMEOUT * 0.8:
                 logger.warning(f"Approaching timeout, stopping early. Scraped {len(all_projects)} projects so far.")
+                if progress_callback:
+                    progress = min(100, int((len(all_projects) / total_projects_to_process) * 100)) if total_projects_to_process > 0 else 0
+                    progress_callback(progress, len(all_projects))
                 return all_projects
 
             logger.info(f"Scraping project {i+1}/{len(project_links)} on page {page_num}: {project_url}")
@@ -434,21 +465,37 @@ def scrape_all_projects(max_pages: Optional[int] = None) -> List[Dict]:
                 project_data['source_url'] = project_url  # Add source URL for reference
                 all_projects.append(project_data)
 
+                # Update progress
+                current_project_index += 1
+                if progress_callback and total_projects_to_process > 0:
+                    progress = min(100, int((current_project_index / total_projects_to_process) * 100))
+                    progress_callback(progress, len(all_projects))
+
                 # Add a smaller delay to be respectful to the server but more efficient
                 time.sleep(0.2)
             else:
                 logger.warning(f"Failed to scrape project: {project_url}")
 
+                # Still update progress even if scraping failed
+                current_project_index += 1
+                if progress_callback and total_projects_to_process > 0:
+                    progress = min(100, int((current_project_index / total_projects_to_process) * 100))
+                    progress_callback(progress, len(all_projects))
+
         page_num += 1
 
     logger.info(f"Scraping completed! Total projects scraped: {len(all_projects)}")
+    if progress_callback:
+        progress_callback(100, len(all_projects))  # Final progress: 100%
+
     return all_projects
 
 
-def scrape_single_category_page(page_num: int = 1) -> List[Dict]:
+def scrape_single_category_page(page_num: int = 1, progress_callback=None) -> List[Dict]:
     """
     Scrape a single category page (for testing or partial scraping)
     :param page_num: Page number to scrape (1 for first page)
+    :param progress_callback: Optional callback function to report progress updates
     :return: List of project data dictionaries
     """
     all_projects = []
@@ -491,7 +538,7 @@ def scrape_single_category_page(page_num: int = 1) -> List[Dict]:
 
 if __name__ == "__main__":
     # Example usage
-    projects = scrape_all_projects(max_pages=2)  # Limit to 2 pages for testing
+    projects = scrape_all_projects(max_pages=2, progress_callback=None)  # Limit to 2 pages for testing
     print(f"Scraped {len(projects)} projects")
     for i, project in enumerate(projects[:3]):  # Print first 3 projects as sample
         print(f"\nProject {i+1}:")

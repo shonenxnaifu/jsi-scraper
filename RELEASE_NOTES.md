@@ -1,3 +1,30 @@
+# JSI Scraper v1.1.2 - Concurrency Control & Enhanced Locking
+
+## 🚀 Feature Enhancements
+- **Concurrent Scraping Prevention**: Added blocking mechanism to prevent multiple simultaneous scraping requests
+  - All scraping endpoints (`/scrape/json`, `/scrape/csv`) now block when another scraping process is in progress
+  - Returns HTTP 423 Locked status with descriptive message when scraping is in progress
+- **Scraping Status API**: New endpoint `/scrape/status` to check current scraping status
+  - Returns status ("IDLE", "IN PROGRESS", "FINISHED"), message, progress percentage, and total projects
+  - Available even when scraping is in progress (not blocked)
+- **Progress Tracking**: Real-time progress updates during scraping operations
+- **Optimized File Locking**: Improved file-based locking mechanism for better cross-worker coordination
+  - Separate lock file for atomic operations and state file for status information
+  - Significantly reduced lock duration to improve responsiveness
+  - Cross-platform compatibility with graceful fallback for systems without `fcntl`
+
+## 🐞 Bug Fixes
+- Fixed race condition issues in multi-worker environments
+- Resolved "FCNTL_AVAILABLE is not defined" error on systems without fcntl support
+- Improved file handling with proper JSON error handling for corrupted files
+- Enhanced atomic operations to prevent deadlocks during long-running scraping
+
+## 🔧 Technical Improvements
+- **Concurrency Control**: Robust mechanism to handle multiple workers in gunicorn deployments
+- **Optimized Locking**: Reduced lock contention by separating critical operations from status updates
+- **Cross-Platform Support**: Works on Linux, macOS, and other Unix-like systems with graceful degradation
+- **Gunicorn Compatibility**: Proper handling of multiple worker processes with file-based coordination
+
 # JSI Scraper v1.0.2 - Enhanced CSV Export
 
 ## 🐞 Bug Fixes
