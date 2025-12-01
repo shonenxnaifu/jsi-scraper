@@ -8,6 +8,7 @@ import logging
 from .scraper import scrape_all_projects
 from .models import ScrapeResponse
 from .__version__ import __version__
+from .state_manager import state_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,15 +32,26 @@ async def scrape_json(
     """
     Scrape project data from jogjasonicindex.com and return as JSON
     """
+    # Check if scraping is already in progress
+    if state_manager.is_scraping():
+        raise HTTPException(status_code=423, detail="Scraping process is currently in progress. Please wait until it completes or check status at /scrape/status")
+
     try:
         logger.info("Starting JSON scraping process...")
-        projects = scrape_all_projects(max_pages=max_pages)
+        state_manager.start_scraping()
+
+        def progress_callback(progress, total_projects):
+            state_manager.update_progress(progress, total_projects)
+
+        projects = scrape_all_projects(max_pages=max_pages, progress_callback=progress_callback)
         logger.info(f"Scraping completed. Total projects: {len(projects)}")
-        
+        state_manager.finish_scraping(f"Scraping completed. Total projects: {len(projects)}")
+
         response = ScrapeResponse(projects=projects)
         return response
     except Exception as e:
         logger.error(f"Error during scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
 
 
@@ -132,10 +144,20 @@ async def scrape_csv(
     """
     Scrape project data from jogjasonicindex.com and return as CSV file
     """
+    # Check if scraping is already in progress
+    if state_manager.is_scraping():
+        raise HTTPException(status_code=423, detail="Scraping process is currently in progress. Please wait until it completes or check status at /scrape/status")
+
     try:
         logger.info("Starting CSV scraping process...")
-        projects = scrape_all_projects(max_pages=max_pages)
+        state_manager.start_scraping()
+
+        def progress_callback(progress, total_projects):
+            state_manager.update_progress(progress, total_projects)
+
+        projects = scrape_all_projects(max_pages=max_pages, progress_callback=progress_callback)
         logger.info(f"Scraping completed. Total projects: {len(projects)}")
+        state_manager.finish_scraping(f"Scraping completed. Total projects: {len(projects)}")
 
         # Generate CSV content
         csv_content = generate_csv_content(projects)
@@ -146,7 +168,18 @@ async def scrape_csv(
         return response
     except Exception as e:
         logger.error(f"Error during CSV scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"CSV scraping failed: {str(e)}")
+
+
+@app.get("/scrape/status")
+async def scrape_status():
+    """
+    Check the current status of the scraping process
+    Returns status and message of the scraping process
+    """
+    status_info = state_manager.get_status()
+    return status_info
 
 
 @app.get("/health")
