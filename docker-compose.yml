@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  jsi-scraper:
+    image: pawitrawarda/jsi_scrap_image:latest
+    container_name: jsi_scrap_ctr
+    ports:
+      - "8021:8000"
+    restart: unless-stopped
+    mem_limit: 256m
+    memswap_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
