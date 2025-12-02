@@ -62,6 +62,7 @@ jobs:
             # Create directory if doesn't exist
             sudo mkdir -p /opt/apps-container/jsi-scraper
 
+      - uses: actions/checkout@v4
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@v1
         with:
