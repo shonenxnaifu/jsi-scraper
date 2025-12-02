@@ -63,7 +63,7 @@ jobs:
             sudo mkdir -p /opt/apps-container/jsi-scraper
 
       - name: Copy docker-compose.yml to server
-        uses: appleboy/scp-action@v0.1.4
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
