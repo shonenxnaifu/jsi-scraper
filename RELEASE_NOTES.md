@@ -1,3 +1,19 @@
+# JSI Scraper v1.1.3 - Docker Compose Deployment & Enhanced Deployment Process
+
+## 🚀 Feature Enhancements
+- **Docker Compose Support**: Added docker-compose.yml for easier deployment and container orchestration
+  - Standardized deployment with memory limits (256m/512m)
+  - Health checks for service monitoring
+  - Restart policies for improved reliability
+- **GitHub Actions Enhancement**: New workflow using Docker Compose for deployment
+  - SCP action for secure copy of docker-compose.yml to server
+  - Docker Compose v2 commands for better compatibility
+  - Container recreation with --force-recreate flag
+  - Automatic cleanup of unused Docker images
+- **Deployment Directory Structure**: Organized deployment with /opt/apps-container/jsi-scraper directory
+  - Dedicated directory for application deployment files
+  - Proper file permissions and organization
+
 # JSI Scraper v1.1.2 - Concurrency Control & Enhanced Locking
 
 ## 🚀 Feature Enhancements

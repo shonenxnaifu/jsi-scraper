@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-12-02
+
+### Added
+- Docker Compose Support: Added docker-compose.yml for easier deployment and container orchestration
+  - Standardized deployment with memory limits (256m/512m)
+  - Health checks for service monitoring
+  - Restart policies for improved reliability
+- GitHub Actions Enhancement: New workflow using Docker Compose for deployment
+  - SCP action for secure copy of docker-compose.yml to server
+  - Docker Compose v2 commands for better compatibility
+  - Container recreation with --force-recreate flag
+  - Automatic cleanup of unused Docker images
+- Deployment Directory Structure: Organized deployment with /opt/apps-container/jsi-scraper directory
+  - Dedicated directory for application deployment files
+  - Proper file permissions and organization
+
 ## [1.1.2] - 2025-12-01
 
 ### Added
