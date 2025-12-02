@@ -70,7 +70,7 @@ jobs:
           key: ${{ secrets.SSHKEY }}
           port: ${{ secrets.PORT }}
           passphrase: ${{ secrets.PASSPHRASE }}
-          source: "docker-compose.yml"
+          source: "./docker-compose.yml"
           target: "/opt/apps-container/jsi-scraper/"
 
       - name: Deploy using Docker Compose
