@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-12-02
+
+### Added
+- Docker Compose Support: Added docker-compose.yml for easier deployment and container orchestration
+  - Standardized deployment with memory limits (256m/512m)
+  - Health checks for service monitoring
+  - Restart policies for improved reliability
+- GitHub Actions Enhancement: New workflow using Docker Compose for deployment
+  - SCP action for secure copy of docker-compose.yml to server
+  - Docker Compose v2 commands for better compatibility
+  - Container recreation with --force-recreate flag
+  - Automatic cleanup of unused Docker images
+- Deployment Directory Structure: Organized deployment with /opt/apps-container/jsi-scraper directory
+  - Dedicated directory for application deployment files
+  - Proper file permissions and organization
+
+## [1.1.2] - 2025-12-01
+
+### Added
+- Concurrent Scraping Prevention: Added blocking mechanism to prevent multiple simultaneous scraping requests
+  - All scraping endpoints (`/scrape/json`, `/scrape/csv`) now block when another scraping process is in progress
+  - Returns HTTP 423 Locked status with descriptive message when scraping is in progress
+- Scraping Status API: New endpoint `/scrape/status` to check current scraping status
+  - Returns status ("IDLE", "IN PROGRESS", "FINISHED"), message, progress percentage, and total projects
+  - Available even when scraping is in progress (not blocked)
+- Progress Tracking: Real-time progress updates during scraping operations
+- Optimized File Locking: Improved file-based locking mechanism for better cross-worker coordination
+  - Separate lock file for atomic operations and state file for status information
+  - Significantly reduced lock duration to improve responsiveness
+  - Cross-platform compatibility with graceful fallback for systems without `fcntl`
+
+### Fixed
+- Fixed race condition issues in multi-worker environments
+- Resolved "FCNTL_AVAILABLE is not defined" error on systems without fcntl support
+- Improved file handling with proper JSON error handling for corrupted files
+- Enhanced atomic operations to prevent deadlocks during long-running scraping
+
+### Changed
+- Concurrency Control: Robust mechanism to handle multiple workers in gunicorn deployments
+- Optimized Locking: Reduced lock contention by separating critical operations from status updates
+- Cross-Platform Support: Works on Linux, macOS, and other Unix-like systems with graceful degradation
+- Gunicorn Compatibility: Proper handling of multiple worker processes with file-based coordination
+
 ## [1.0.2] - 2025-11-27
 
 ### Fixed

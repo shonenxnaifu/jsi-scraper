@@ -50,7 +50,29 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push
     steps:
-      - name: Deploy to VPS via SSH action
+      - name: Create directory on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            # Create directory if doesn't exist
+            sudo mkdir -p /opt/apps-container/jsi-scraper
+
+      - name: Copy docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORT }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          source: "docker-compose.yml"
+          target: "/opt/apps-container/jsi-scraper/"
+
+      - name: Deploy using Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -60,11 +82,30 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           envs: IMAGE_NAME, CONTAINER_NAME
           script: |
-            # Pull registry
-            docker pull pawitrawarda/$(echo $IMAGE_NAME):latest
-            # Stop running container
-            docker stop $(echo $CONTAINER_NAME)
-            # Remove old container
-            docker rm $(echo $CONTAINER_NAME)
-            # Run a new container from a new image
-            docker run -d -p 8021:8000 --name $(echo $CONTAINER_NAME) --memory=256m --memory-swap=512m --restart=unless-stopped pawitrawarda/$(echo $IMAGE_NAME):latest
+            # Navigate to the directory and deploy
+            cd /opt/apps-container/jsi-scraper
+
+            # Pull latest image
+            docker compose pull
+
+            # Stop and remove existing container
+            docker compose down --remove-orphans
+
+            # Start services
+            docker compose up -d --force-recreate
+
+            # Check status of the containers
+            docker compose ps
+
+            # Remove unused images
+            docker image prune -f
+
+            # old script
+            # # Pull latest image
+            # docker pull pawitrawarda/$(echo $IMAGE_NAME):latest
+            # # Stop running container
+            # docker stop $(echo $CONTAINER_NAME)
+            # # Remove old container
+            # docker rm $(echo $CONTAINER_NAME)
+            # # Run a new container from a new image
+            # docker run -d -p 8021:8000 --name $(echo $CONTAINER_NAME) --memory=256m --memory-swap=512m --restart=unless-stopped pawitrawarda/$(echo $IMAGE_NAME):latest
