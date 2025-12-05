@@ -65,6 +65,20 @@ The application will be available at `http://localhost:8000`.
      - `max_pages` (optional): Limit the number of project pages to scrape
    - Returns: CSV formatted scraped data from jogjasonicindex.com as a downloadable file
 
+3. **JSON Range Endpoint**: `/scrape/json/range`
+   - Method: GET
+   - Parameters:
+     - `page_from` (required): Starting page number (≥ 1)
+     - `page_to` (required): Ending page number (≥ page_from)
+   - Returns: JSON formatted scraped data from jogjasonicindex.com for the specified page range
+
+4. **CSV Range Endpoint**: `/scrape/csv/range`
+   - Method: GET
+   - Parameters:
+     - `page_from` (required): Starting page number (≥ 1)
+     - `page_to` (required): Ending page number (≥ page_from)
+   - Returns: CSV formatted scraped data from jogjasonicindex.com as a downloadable file for the specified page range
+
 ### API Documentation
 After starting the server, visit `http://localhost:8000/docs` to access the interactive API documentation and test the endpoints.
 

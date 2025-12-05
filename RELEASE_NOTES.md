@@ -1,3 +1,22 @@
+# JSI Scraper v1.2.3 - Page Range Feature
+
+## 🚀 Feature Enhancements
+- **New Page Range Endpoints**: Added endpoints to specify exact page ranges for scraping
+  - `/scrape/json/range?page_from=X&page_to=Y` - Get JSON data for specific page range
+  - `/scrape/csv/range?page_from=X&page_to=Y` - Get CSV data for specific page range
+- **Enhanced Parameter Validation**: Comprehensive validation for page range parameters
+  - Validates `page_from` ≥ 1
+  - Validates `page_to` ≥ `page_from`
+  - Proper error responses (422) for invalid parameters
+- **Maintained Backward Compatibility**: Existing endpoints continue to work with `max_pages` parameter
+  - `/scrape/json?max_pages=N` - Existing functionality preserved
+  - `/scrape/csv?max_pages=N` - Existing functionality preserved
+
+## 🔧 Technical Improvements
+- **New Scraper Function**: `scrape_page_range()` function with optimized range-based scraping
+- **Improved Architecture**: Separate function for range-based scraping with shared validation logic
+- **Enhanced Error Handling**: Better error messages and consistent response formats
+
 # JSI Scraper v1.1.3 - Docker Compose Deployment & Enhanced Deployment Process
 
 ## 🚀 Feature Enhancements
