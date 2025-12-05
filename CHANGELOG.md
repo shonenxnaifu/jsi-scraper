@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-12-05
+
+### Added
+- New endpoints `/scrape/json/range` and `/scrape/csv/range` to support page range scraping
+- Added `page_from` and `page_to` parameters for precise page range control
+- Input validation for page range parameters
+- Error handling for range validation failures
+- Updated API documentation with new endpoints
+
+### Changed
+- Enhanced scraper module with `scrape_page_range` function
+- Maintained backward compatibility for existing `max_pages` parameter
+- Improved error response messages for validation failures
+
 ## [1.1.3] - 2025-12-02
 
 ### Added

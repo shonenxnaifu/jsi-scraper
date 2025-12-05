@@ -5,7 +5,7 @@ import io
 import csv
 import logging
 
-from .scraper import scrape_all_projects
+from .scraper import scrape_all_projects, scrape_page_range
 from .models import ScrapeResponse
 from .__version__ import __version__
 from .state_manager import state_manager
@@ -51,6 +51,45 @@ async def scrape_json(
         return response
     except Exception as e:
         logger.error(f"Error during scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+
+@app.get("/scrape/json/range", response_model=ScrapeResponse)
+async def scrape_json_range(
+    page_from: int = Query(..., ge=1, description="Starting page number (≥ 1)"),
+    page_to: int = Query(..., ge=1, description="Ending page number (≥ page_from)")
+):
+    """
+    Scrape project data from jogjasonicindex.com within a page range and return as JSON
+    """
+    # Check if scraping is already in progress
+    if state_manager.is_scraping():
+        raise HTTPException(status_code=423, detail="Scraping process is currently in progress. Please wait until it completes or check status at /scrape/status")
+
+    # Validate that page_to is not less than page_from
+    if page_to < page_from:
+        raise HTTPException(status_code=422, detail="page_to must be greater than or equal to page_from")
+
+    try:
+        logger.info(f"Starting JSON scraping process for pages {page_from} to {page_to}...")
+        state_manager.start_scraping()
+
+        def progress_callback(progress, total_projects):
+            state_manager.update_progress(progress, total_projects)
+
+        projects = scrape_page_range(page_from=page_from, page_to=page_to, progress_callback=progress_callback)
+        logger.info(f"Scraping completed. Total projects: {len(projects)}")
+        state_manager.finish_scraping(f"Scraping completed. Total projects: {len(projects)}")
+
+        response = ScrapeResponse(projects=projects)
+        return response
+    except ValueError as e:
+        logger.error(f"Validation error during range scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error during range scraping: {e}")
         state_manager.finish_scraping(f"Scraping failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
 
@@ -168,6 +207,50 @@ async def scrape_csv(
         return response
     except Exception as e:
         logger.error(f"Error during CSV scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"CSV scraping failed: {str(e)}")
+
+
+@app.get("/scrape/csv/range")
+async def scrape_csv_range(
+    page_from: int = Query(..., ge=1, description="Starting page number (≥ 1)"),
+    page_to: int = Query(..., ge=1, description="Ending page number (≥ page_from)")
+):
+    """
+    Scrape project data from jogjasonicindex.com within a page range and return as CSV file
+    """
+    # Check if scraping is already in progress
+    if state_manager.is_scraping():
+        raise HTTPException(status_code=423, detail="Scraping process is currently in progress. Please wait until it completes or check status at /scrape/status")
+
+    # Validate that page_to is not less than page_from
+    if page_to < page_from:
+        raise HTTPException(status_code=422, detail="page_to must be greater than or equal to page_from")
+
+    try:
+        logger.info(f"Starting CSV scraping process for pages {page_from} to {page_to}...")
+        state_manager.start_scraping()
+
+        def progress_callback(progress, total_projects):
+            state_manager.update_progress(progress, total_projects)
+
+        projects = scrape_page_range(page_from=page_from, page_to=page_to, progress_callback=progress_callback)
+        logger.info(f"Scraping completed. Total projects: {len(projects)}")
+        state_manager.finish_scraping(f"Scraping completed. Total projects: {len(projects)}")
+
+        # Generate CSV content
+        csv_content = generate_csv_content(projects)
+
+        # Create a streaming response for the CSV content
+        response = StreamingResponse(io.StringIO(csv_content), media_type="text/csv")
+        response.headers["Content-Disposition"] = "attachment; filename=jogjasonicindex_projects.csv"
+        return response
+    except ValueError as e:
+        logger.error(f"Validation error during range scraping: {e}")
+        state_manager.finish_scraping(f"Scraping failed: {str(e)}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error during range scraping: {e}")
         state_manager.finish_scraping(f"Scraping failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"CSV scraping failed: {str(e)}")
 
